@@ -19,6 +19,11 @@ BinaryTree::BinaryTree()
 
 BinaryTree::~BinaryTree()
 {
+	while (!IsEmpty())
+	{
+		//Deletes the root (Which will assign the root to something else) until the tree is empty.
+		Remove(m_pRoot->GetData());
+	}
 }
 
 // Return whether the tree is empty
@@ -59,6 +64,7 @@ void BinaryTree::Insert(int a_nValue)
 	tmpNode = nullptr;
 }
 
+//Used to just find a singular node
 TreeNode* BinaryTree::Find(int a_nValue)
 {
 	TreeNode* pCurrent = nullptr;
@@ -67,6 +73,7 @@ TreeNode* BinaryTree::Find(int a_nValue)
 	return FindNode(a_nValue, pCurrent, pParent) ? pCurrent: nullptr;
 }
 
+//Finds a node & it's parent based on the search value
 bool BinaryTree::FindNode(int a_nSearchValue, TreeNode* &ppOutNode, TreeNode* &ppOutParent)
 {
 	if (IsEmpty()) {return false; }
@@ -100,64 +107,69 @@ bool BinaryTree::FindNode(int a_nSearchValue, TreeNode* &ppOutNode, TreeNode* &p
 
 void BinaryTree::Remove(int a_nValue)
 {
-	if (IsEmpty()) { return; }
+	// If the tree is empty just return
+	if (IsEmpty()) { return; } 
+
 	TreeNode* pCurrent = nullptr;
 	TreeNode* pParent = nullptr;
 
-	FindNode(a_nValue, pCurrent, pParent);
-
+	// Find the node to remove and its parent.
+	FindNode(a_nValue, pCurrent, pParent); 
 	if (pCurrent->HasRight())
 	{
-		TreeNode* TempNode = pCurrent->GetRight();
-		TreeNode* ParentTempNode = pCurrent;
-		int tmpcount = 0;
-		while (TempNode != NULL)
+		// If the node has a right node, replace with next smallest node.
+		TreeNode* pSuccessor = pCurrent->GetRight();
+		TreeNode* pParentSuccessor = pCurrent;
+
+		while (pSuccessor->HasLeft())
 		{
-			if (TempNode->GetLeft() != NULL)
-			{
-				TempNode = TempNode->GetLeft();
-				if (tmpcount == 0)
-				{
-					ParentTempNode = ParentTempNode->GetRight();
-				}
-				else { ParentTempNode = ParentTempNode->GetLeft(); }
-			}
-			else
-			{
-				pCurrent->SetData(TempNode->GetData());
-				if (TempNode->GetData() < ParentTempNode->GetData())
-				{
-					ParentTempNode->SetLeft(TempNode->GetRight());
-				}
-				else 
-				{ 
-					ParentTempNode->SetRight(TempNode->GetRight()); 
-				}
-				delete TempNode;
-				TempNode = NULL;
-				ParentTempNode = NULL;
-			}
+			pParentSuccessor = pSuccessor;
+			// Find the in-order successor.
+			pSuccessor = pSuccessor->GetLeft(); 
 		}
+
+		// Copy data from successor to current node.
+		pCurrent->SetData(pSuccessor->GetData()); 
+
+		if (pParentSuccessor->GetLeft() == pSuccessor)
+		{
+			// Updates parent's left child.
+			pParentSuccessor->SetLeft(pSuccessor->GetRight()); 
+		}
+		else
+		{
+			// Updates parent's right child.
+			pParentSuccessor->SetRight(pSuccessor->GetRight()); 
+		}
+
+		delete pSuccessor;
+		pSuccessor = nullptr;
 	}
 	else
 	{
+		// Node to remove doesn't have a right node.
 		if (pCurrent == m_pRoot)
 		{
-			m_pRoot->SetLeft(pCurrent->GetLeft());
+			// Update root if necessary.
+			m_pRoot = pCurrent->GetLeft(); 
 		}
 		else if (pCurrent->GetData() < pParent->GetData())
 		{
-			pParent->SetLeft(pCurrent->GetLeft());
+			// Update parent's left child.
+			pParent->SetLeft(pCurrent->GetLeft()); 
 		}
-		else if (pCurrent->GetData() > pParent->GetData())
+		else
 		{
-			pParent->SetRight(pCurrent->GetLeft());
+			// Update parent's right child.
+			pParent->SetRight(pCurrent->GetLeft()); 
 		}
+
 		delete pCurrent;
-		pCurrent = NULL;
-		pParent = NULL;
 	}
+	pCurrent = nullptr;
+	pParent = nullptr;
 }
+
 
 void BinaryTree::PrintOrdered()
 {
